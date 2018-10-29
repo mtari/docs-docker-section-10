@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t mihalytari/react-image-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run mihalytari/react-image-test npm test -- --coverage
+
+after_success:
+  - docker build -t mihalytari/multi-client ./client
+  - docker build -t mihalytari/multi-nginx ./nginx
+  - docker build -t mihalytari/multi-server ./server
+  - docker build -t mihalytari/multi-worker ./worker
+  #Log in to docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  #Take these images and push them to docker hub
+  - docker push mihalytari/multi-client
+  - docker push mihalytari/multi-nginx
+  - docker push mihalytari/multi-server
+  - docker push mihalytari/multi-worker
